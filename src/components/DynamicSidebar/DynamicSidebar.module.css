@@ -13,7 +13,7 @@
 .inputsContainer {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0.5rem; /* Este gap controlará el espaciado vertical entre los campos */
   flex-grow: 1; /* Esto hace que el contenedor de inputs ocupe el espacio restante */
 }
 
@@ -28,4 +28,12 @@
   display: flex;
   flex-direction: column; 
   height: 100%;
+}
+
+.customTextField {
+  /* Apunta a la clase interna de MUI que crea el borde del input */
+  & .MuiOutlinedInput-notchedOutline {
+    border-color: #333 !important; /* Color del borde más oscuro */
+    border-width: 2px !important; /* Grosor del borde */
+  }
 }

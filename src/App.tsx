@@ -13,43 +13,67 @@ const sampleColumns: Column[] = [
   {
     id: 'companyNumber',
     label: 'Compañia',
-    type: 'select',
-    options: [],
+    type: 'select', // ej: 'text', 'number', 'date', 'select'
     dependentColumns: [], // Corregido: Array vacío para indicar que no tiene dependencias
-    requestURl: `${BASE_URL}/getAllCompany`, // Eliminada la barra diagonal final
+    requestURl: `${BASE_URL}/getAllCompany`,
+    errorOptionMessage: 'No hay compañías disponibles',
+    htmlInputProps: {
+      required: true,
+    }
   },
   {
     id: 'areaId',
     label: 'Area',
     type: 'select',
-    options: [],
     dependentColumns: ['companyNumber'],
-    requestURl: `${BASE_URL}/getAreaByCompany`, // Eliminada la barra diagonal final
+    requestURl: `${BASE_URL}/getAreaByCompany`,
+    errorOptionMessage: 'No hay áreas disponibles para la compañía seleccionada',
+    htmlInputProps: {
+      required: true,
+    }
   },
   {
     id: 'conceptId',
     label: 'Concepto',
     type: 'select',
-    options: [],
     dependentColumns: ['companyNumber', 'areaId'],
-    requestURl: `${BASE_URL}/getConceptByAreaAndCompany`, // Eliminada la barra diagonal final
+    requestURl: `${BASE_URL}/concept`,
+    errorOptionMessage: 'No hay conceptos disponibles para el área y compañía seleccionada',
+    htmlInputProps: {
+      required: true,
+    }
   },
   {
     id: 'bankId',
     label: 'Banco',
     type: 'select',
-    options: [],
     dependentColumns: ['companyNumber'],
-    requestURl: `${BASE_URL}/getBankByCompany`, // Eliminada la barra diagonal final
+    requestURl: `${BASE_URL}/getBankByCompany`,
+    errorOptionMessage: 'No hay bancos disponibles para la compañía seleccionada',
+    htmlInputProps: {
+      required: true,
+    }
   },
   {
     id: 'accountNumber',
     label: 'Cuenta',
     type: 'select',
-    options: [],
     dependentColumns: ['companyNumber', 'bankId'],
-    requestURl: `${BASE_URL}/getAccountByBankAndCompany`, // Eliminada la barra diagonal final
+    requestURl: `${BASE_URL}/account`,
+    errorOptionMessage: 'No hay cuentas disponibles para el banco y compañía seleccionada',
+    htmlInputProps: {
+      required: true,
+    }
   },
+  {
+    id: 'salida',
+    label: 'Salida',
+    type: 'text',
+    dependentColumns: [],
+    htmlInputProps: {
+      required: true,
+    }
+  }
 ];
 
 const App: React.FC = () => {

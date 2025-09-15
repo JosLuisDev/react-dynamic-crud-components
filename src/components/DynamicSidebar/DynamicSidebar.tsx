@@ -9,6 +9,7 @@ import {
   Button,
   TextField,
   MenuItem,
+  LinearProgress,
 } from '@mui/material';
 import { DynamicSidebarProps, Column } from '../../types';
 import styles from './DynamicSidebar.module.css';
@@ -56,7 +57,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
     let requestUrl = column.requestURl;
     if (dependentValues) {
       const values = Object.values(dependentValues).join('/');
-      requestUrl = `${requestUrl}/${values}`; // Corrección: Agrega la barra diagonal aquí
+      requestUrl = `${requestUrl}/${values}`;
     }
 
     try {
@@ -127,11 +128,12 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
   };
 
   const renderInput = (column: Column) => {
-    const { id, label, type, options, requestURl, dependentColumns } = column;
-    const currentOptions = columnOptions[id] || options;
+    const { id, label, type, dependentColumns, errorOptionMessage, htmlInputProps } = column;
+    const currentOptions = columnOptions[id] || [];
 
     const isSelect = type === 'select';
     const isFetching = !!loading[id];
+    const showProgress = isSelect && isFetching;
     
     // Condición para deshabilitar el input
     let isDisabled = false;
@@ -161,6 +163,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
             margin="normal"
             type={type}
             slotProps={{
+              htmlInput: htmlInputProps,
               inputLabel: {
                 shrink: type === 'date' || !!formData[id],
               },
@@ -171,29 +174,47 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
         );
       case 'select':
         return (
-          <TextField
-            key={id}
-            select
-            label={label}
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formData[id] || ''}
-            onChange={(e) => handleInputChange(id, e.target.value)}
-            disabled={isDisabled}
-          >
-            {isFetching ? (
-              <MenuItem disabled>Cargando...</MenuItem>
-            ) : currentOptions?.length > 0 ? (
-              currentOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))
-            ) : (
-              <MenuItem disabled>No hay opciones disponibles</MenuItem>
+          <Box sx={{ position: 'relative', width: '100%' }}> {/* Contenedor para el TextField y el LinearProgress */}
+            <TextField
+              key={id}
+              select
+              label={label}
+              variant="outlined"
+              fullWidth
+              value={formData[id] || ''}
+              onChange={(e) => handleInputChange(id, e.target.value)}
+              disabled={isDisabled}
+              sx={{
+                '& .MuiSelect-select:focus': {
+                  backgroundColor: 'transparent',
+                },
+              }}
+            >
+              {isFetching ? (
+                <MenuItem disabled>Cargando...</MenuItem>
+              ) : currentOptions?.length > 0 ? (
+                currentOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>{errorOptionMessage}</MenuItem>
+              )}
+            </TextField>
+            {showProgress && (
+              <LinearProgress
+                sx={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  width: '100%',
+                  borderRadius: '0 0 4px 4px',
+                  height: 4,
+                }}
+              />
             )}
-          </TextField>
+          </Box>
         );
       default:
         return null;
@@ -207,17 +228,17 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
       onClose={onClose}
       classes={{ paper: styles.drawerPaper }}
     >
-      <Box className={styles.mainContainer}>
-        <Box className={styles.container}>
+      <Box className={styles.mainContainer}> 
+        <Box className={styles.container}> 
           <Typography variant="h6" className={styles.title}>
             {title}
           </Typography>
           <Divider />
-          <Box className={styles.inputsContainer}>
+          <Box className={styles.inputsContainer}> {/* Contenedor de los input */}
             {columns.map(renderInput)}
           </Box>
         </Box>
-        <Box className={styles.buttonsContainer}>
+        <Box className={styles.buttonsContainer}> {/* Contenedor de los botones del footer */}
           <Button onClick={onClose} variant="outlined">
             Cancelar
           </Button>
