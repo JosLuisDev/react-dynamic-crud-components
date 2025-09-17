@@ -12,7 +12,7 @@ import {
   LinearProgress,
 } from '@mui/material';
 import { DynamicSidebarProps, Column } from '../../types';
-import styles from './DynamicSidebar.module.css';
+import styles from './DynamicSidebar.module.scss';
 
 interface ColumnOptionsState {
   [id: string]: { value: string; label: string }[];
@@ -109,7 +109,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
           depCol.dependentColumns?.forEach((depId) => {
             dependentValues[depId] = id === depId ? value : formData[depId];
           });
-          
+
           const allDependenciesMet = depCol.dependentColumns?.every(
             (depId) => !!(id === depId ? value : formData[depId])
           );
@@ -128,98 +128,105 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
   };
 
   const renderInput = (column: Column) => {
-    const { id, label, type, dependentColumns, errorOptionMessage, htmlInputProps } = column;
-    const currentOptions = columnOptions[id] || [];
+  const { id, label, type, dependentColumns, errorOptionMessage, htmlInputProps } = column;
+  const currentOptions = columnOptions[id] || [];
 
-    const isSelect = type === 'select';
-    const isFetching = !!loading[id];
-    const showProgress = isSelect && isFetching;
-    
-    // Condición para deshabilitar el input
-    let isDisabled = false;
-    if (isSelect) {
-      // Deshabilitar si está cargando
-      if (isFetching) {
+  const isSelect = type === 'select';
+  const isFetching = !!loading[id];
+  const showProgress = isSelect && isFetching;
+
+  let isDisabled = false;
+  if (isSelect) {
+    if (isFetching) {
+      isDisabled = true;
+    } else if (dependentColumns && dependentColumns.length > 0) {
+      const parentColumnId = dependentColumns[0];
+      if (!formData[parentColumnId]) {
         isDisabled = true;
-      // Deshabilitar si es una columna dependiente y la columna padre no tiene valor
-      } else if (dependentColumns && dependentColumns.length > 0) {
-        const parentColumnId = dependentColumns[0];
-        if (!formData[parentColumnId]) {
-          isDisabled = true;
-        }
       }
     }
+  }
 
-    switch (type) {
-      case 'text':
-      case 'number':
-      case 'date':
-        return (
+  switch (type) {
+    case 'text':
+    case 'number':
+    case 'date':
+      return (
+        <TextField
+          key={id}
+          label={label}
+          variant="outlined"
+          fullWidth
+          type={type}
+          // Aplica la clase unificada aquí
+          className={styles.customInput}
+          slotProps={{
+            htmlInput: htmlInputProps,
+            inputLabel: {
+              shrink: type === 'date' || !!formData[id],
+              className: styles.customLabel,
+            },
+          }}
+          value={formData[id] || ''}
+          onChange={(e) => handleInputChange(id, e.target.value)}
+        />
+      );
+    case 'select':
+      return (
+        <Box sx={{ position: 'relative', width: '100%' }}>
           <TextField
             key={id}
+            select
             label={label}
             variant="outlined"
             fullWidth
-            margin="normal"
-            type={type}
-            slotProps={{
-              htmlInput: htmlInputProps,
-              inputLabel: {
-                shrink: type === 'date' || !!formData[id],
-              },
-            }}
             value={formData[id] || ''}
             onChange={(e) => handleInputChange(id, e.target.value)}
-          />
-        );
-      case 'select':
-        return (
-          <Box sx={{ position: 'relative', width: '100%' }}> {/* Contenedor para el TextField y el LinearProgress */}
-            <TextField
-              key={id}
-              select
-              label={label}
-              variant="outlined"
-              fullWidth
-              value={formData[id] || ''}
-              onChange={(e) => handleInputChange(id, e.target.value)}
-              disabled={isDisabled}
-              sx={{
-                '& .MuiSelect-select:focus': {
-                  backgroundColor: 'transparent',
-                },
-              }}
-            >
-              {isFetching ? (
-                <MenuItem disabled>Cargando...</MenuItem>
-              ) : currentOptions?.length > 0 ? (
-                currentOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>{errorOptionMessage}</MenuItem>
-              )}
-            </TextField>
-            {showProgress && (
-              <LinearProgress
-                sx={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  width: '100%',
-                  borderRadius: '0 0 4px 4px',
-                  height: 4,
-                }}
-              />
+            disabled={isDisabled}
+            // Aplica la clase unificada aquí también
+            className={styles.customInput}
+            sx={{
+              '& .MuiSelect-select:focus': {
+                backgroundColor: 'transparent',
+              },
+            }}
+            slotProps={{
+              inputLabel: {
+                className: styles.customLabel,
+                shrink: !!formData[id],
+              },
+            }}
+          >
+            {isFetching ? (
+              <MenuItem disabled>Cargando...</MenuItem>
+            ) : currentOptions?.length > 0 ? (
+              currentOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem disabled>{errorOptionMessage}</MenuItem>
             )}
-          </Box>
-        );
-      default:
-        return null;
-    }
-  };
+          </TextField>
+          {showProgress && (
+            <LinearProgress
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                width: '100%',
+                borderRadius: '0 0 4px 4px',
+                height: 4,
+              }}
+            />
+          )}
+        </Box>
+      );
+    default:
+      return null;
+  }
+};
 
   return (
     <Drawer
@@ -229,20 +236,27 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
       classes={{ paper: styles.drawerPaper }}
     >
       <Box className={styles.mainContainer}> 
-        <Box className={styles.container}> 
+        <Box className={styles.headerContainer}> {/* Contenedor del encabezado */}
           <Typography variant="h6" className={styles.title}>
             {title}
           </Typography>
-          <Divider />
-          <Box className={styles.inputsContainer}> {/* Contenedor de los input */}
+          {/* Aquí puedes agregar un botón de cierre si lo necesitas */}
+          <Divider className={styles.divider} />
+        </Box>
+        
+
+        {/* Este es el contenedor principal que debe crecer para empujar el footer hacia abajo */}
+        <Box className={styles.contentContainer}> 
+          <Box className={styles.inputsContainer}>
             {columns.map(renderInput)}
           </Box>
         </Box>
-        <Box className={styles.buttonsContainer}> {/* Contenedor de los botones del footer */}
-          <Button onClick={onClose} variant="outlined">
+
+        <Box className={styles.buttonsContainer}>
+          <Button onClick={onClose} variant="outlined" className={styles.button}>
             Cancelar
           </Button>
-          <Button onClick={handleSave} variant="contained">
+          <Button onClick={handleSave} variant="contained" className={styles.button}>
             Guardar
           </Button>
         </Box>

@@ -1,0 +1,87 @@
+/* src/components/DynamicSidebar.module.css */
+
+.drawerPaper {
+  width: 23%;
+  max-width: 500px;
+  min-width: 434px;
+  box-sizing: border-box;
+  padding: 16px;
+}
+
+.title {
+  padding: 1rem;
+  text-align: center;
+  /* La siguiente regla apunta directamente al elemento que tiene ambas clases */
+  &.MuiTypography-root {
+    font-weight: bold !important;
+    font-size: 3.5rem !important;
+  }
+
+  &.MuiTypography-h6 {
+    font-size: 2.5rem !important;
+  }
+}
+
+.headerContainer {
+  margin-bottom: 1.5rem;
+}
+
+.divider {
+  &.MuiDivider-root {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.mainContainer {
+  display: flex;
+  flex-direction: column; 
+  height: 100%;
+}
+
+.contentContainer {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.inputsContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 0.7rem;
+}
+
+.buttonsContainer {
+  display: flex;
+  justify-content: space-evenly;
+  padding-top: 16px;
+  gap: 8px;
+}
+
+.button {
+  padding: 0.5rem 1.5rem !important;
+  font-size: 0.75rem !important;
+}
+
+.customInput {
+  /* Estilos para el contenedor principal (FormControl) */
+  &.MuiFormControl-root {
+    /* Aquí podrías agregar estilos si fuera necesario */
+  }
+
+  /* Estilos para el label */
+  & .MuiInputLabel-root {
+    font-size: 0.9rem !important;
+  }
+
+  /* Estilos para el borde */
+  & .MuiOutlinedInput-notchedOutline {
+    border-color: #333 !important;
+    border-width: 3px !important;
+  }
+
+  /* Estilos para el padding interno del input */
+  & .MuiOutlinedInput-input {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+}
