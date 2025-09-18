@@ -1,87 +1,204 @@
-/* src/components/DynamicSidebar.module.css */
+/* src/components/DynamicSidebar.module.scss */
 
-.drawerPaper {
+/* Estilos globales y variables */
+$border-color: #dbe0e6;
+$text-color: #333;
+$primary-color: #1d83d6;
+$disabled-bg: #f5f5f5;
+$disabled-text: #9e9e9e;
+$background-color-transparent: #00000000;
+
+body {
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* Contenedor principal del sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
   width: 23%;
   max-width: 500px;
   min-width: 434px;
-  box-sizing: border-box;
-  padding: 16px;
-}
-
-.title {
-  padding: 1rem;
-  text-align: center;
-  /* La siguiente regla apunta directamente al elemento que tiene ambas clases */
-  &.MuiTypography-root {
-    font-weight: bold !important;
-    font-size: 3.5rem !important;
-  }
-
-  &.MuiTypography-h6 {
-    font-size: 2.5rem !important;
-  }
-}
-
-.headerContainer {
-  margin-bottom: 1.5rem;
-}
-
-.divider {
-  &.MuiDivider-root {
-    margin-bottom: 1.5rem;
-  }
-}
-
-.mainContainer {
+  background-color: #fff;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
   display: flex;
-  flex-direction: column; 
-  height: 100%;
+  flex-direction: column;
 }
 
-.contentContainer {
+/* Encabezado */
+.header {
+  padding: 2.5rem;
+  text-align: center;
+  border-bottom: 1px solid $border-color;
+  position: relative;
+}
+
+.headerTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $text-color;
+  margin: 0;
+}
+
+.closeButton {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: $text-color;
+}
+
+/* Divisor */
+.divider {
+  border: none;
+  background-color: $border-color;
+  margin-bottom: 0.5rem;
+}
+
+/* Contenedor de los inputs y el formulario */
+.formContainer {
   flex-grow: 1;
   overflow-y: auto;
+  padding: 1rem;
 }
 
 .inputsContainer {
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-  gap: 0.7rem;
+  gap: 1rem;
 }
 
-.buttonsContainer {
+/* Estilos de los campos de formulario */
+.formGroup {
   display: flex;
-  justify-content: space-evenly;
-  padding-top: 16px;
-  gap: 8px;
+  flex-direction: column;
+  position: relative;
+}
+
+.option {
+  font-family: 'Inter', sans-serif !important;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: #858585;
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  transition: all 0.2s ease-in-out;
+  pointer-events: none;
+  background-color: $background-color-transparent;
+  padding: 0 2px; // Alinear el texto con el valor del input
+}
+
+.inputField,
+.selectField {
+  width: 100%;
+  padding: 14px 12px 14px;
+  font-size: 0.8rem;
+  border: 1px solid #c9c9c9;
+  box-shadow: 0 4px 6px #0000001a;
+  border-radius: 8px;
+  box-sizing: border-box;
+  background-color: $background-color-transparent;
+  color: #333;
+  
+  &:focus {
+    outline: 0;
+    border-color: #007bff;
+    box-shadow: inset 0 0 10px 0 rgba(85, 85, 85, .1);
+  }
+}
+
+
+.selectField {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+.selectWrapper {
+  position: relative;
+}
+
+.fieldFilled {
+  .label {
+    top: 0;
+    font-size: 0.75rem;
+    transform: translateY(3px);
+  }
+  .inputField,
+  .selectField {
+    padding-top: 18px;
+    padding-bottom: 6px;
+  }
+}
+
+/* Estados de deshabilitado */
+.inputField[disabled],
+.selectField[disabled] {
+  background-color: $disabled-bg;
+  color: $disabled-text;
+  cursor: not-allowed;
+  border-color: #e0e0e0;
+}
+
+/* Contenedor del loader y el select */
+.selectContainer {
+  position: relative;
+}
+
+.loaderBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: $primary-color;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { transform: scaleX(0); }
+  50% { transform: scaleX(1); }
+  100% { transform: scaleX(0); }
+}
+
+/* Pie de página y botones */
+.footer {
+  padding: 1rem;
+  border-top: 1px solid $border-color;
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
 }
 
 .button {
-  padding: 0.5rem 1.5rem !important;
-  font-size: 0.75rem !important;
+  padding: 0.8rem 2rem;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
-.customInput {
-  /* Estilos para el contenedor principal (FormControl) */
-  &.MuiFormControl-root {
-    /* Aquí podrías agregar estilos si fuera necesario */
-  }
+.cancelButton {
+  background-color: #fff;
+  color: $text-color;
+}
 
-  /* Estilos para el label */
-  & .MuiInputLabel-root {
-    font-size: 0.9rem !important;
-  }
-
-  /* Estilos para el borde */
-  & .MuiOutlinedInput-notchedOutline {
-    border-color: #333 !important;
-    border-width: 3px !important;
-  }
-
-  /* Estilos para el padding interno del input */
-  & .MuiOutlinedInput-input {
-    padding-top: 10px;
-    padding-bottom: 10px;
-  }
+.saveButton {
+  background-color: $primary-color;
+  color: #fff;
+  border-color: $primary-color;
 }

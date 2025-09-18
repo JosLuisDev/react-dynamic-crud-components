@@ -1,18 +1,11 @@
 // src/components/DynamicSidebar.tsx
 
 import React, { useState, useEffect } from 'react';
-import {
-  Drawer,
-  Box,
-  Typography,
-  Divider,
-  Button,
-  TextField,
-  MenuItem,
-  LinearProgress,
-} from '@mui/material';
 import { DynamicSidebarProps, Column } from '../../types';
 import styles from './DynamicSidebar.module.scss';
+// Asegúrate de que los íconos estén disponibles como componentes SVG en tu proyecto
+// import { ReactComponent as CloseIcon } from './close.svg';
+// import { ReactComponent as CheckIcon } from './check.svg';
 
 interface ColumnOptionsState {
   [id: string]: { value: string; label: string }[];
@@ -28,11 +21,13 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [columnOptions, setColumnOptions] = useState<ColumnOptionsState>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [fetchSuccess, setFetchSuccess] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (isOpen) {
       setFormData({});
       setColumnOptions({});
+      setFetchSuccess({});
 
       const independentSelects = columns.filter(
         (col) => col.type === 'select' && (!col.dependentColumns || col.dependentColumns.length === 0)
@@ -53,6 +48,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
     }
 
     setLoading((prev) => ({ ...prev, [column.id]: true }));
+    setFetchSuccess((prev) => ({ ...prev, [column.id]: false }));
 
     let requestUrl = column.requestURl;
     if (dependentValues) {
@@ -76,12 +72,14 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
         ...prev,
         [column.id]: options,
       }));
+      setFetchSuccess((prev) => ({ ...prev, [column.id]: true }));
     } catch (error) {
       console.error(`Error fetching data for ${column.label}:`, error);
       setColumnOptions((prev) => ({
         ...prev,
         [column.id]: [],
       }));
+      setFetchSuccess((prev) => ({ ...prev, [column.id]: false }));
     } finally {
       setLoading((prev) => ({ ...prev, [column.id]: false }));
     }
@@ -101,6 +99,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
       dependentColumnsToClear.forEach((depCol) => {
         setFormData((prev) => ({ ...prev, [depCol.id]: '' }));
         setColumnOptions((prev) => ({ ...prev, [depCol.id]: [] }));
+        setFetchSuccess((prev) => ({ ...prev, [depCol.id]: false }));
       });
 
       if (value) {
@@ -109,7 +108,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
           depCol.dependentColumns?.forEach((depId) => {
             dependentValues[depId] = id === depId ? value : formData[depId];
           });
-
+          
           const allDependenciesMet = depCol.dependentColumns?.every(
             (depId) => !!(id === depId ? value : formData[depId])
           );
@@ -128,140 +127,106 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
   };
 
   const renderInput = (column: Column) => {
-  const { id, label, type, dependentColumns, errorOptionMessage, htmlInputProps } = column;
-  const currentOptions = columnOptions[id] || [];
+    const { id, label, type, errorOptionMessage, htmlInputProps } = column;
+    const currentOptions = columnOptions[id] || [];
+    const isSelect = type === 'select';
+    const isFetching = !!loading[id];
+    const isSuccessful = !!fetchSuccess[id];
+    const showProgress = isSelect && isFetching;
 
-  const isSelect = type === 'select';
-  const isFetching = !!loading[id];
-  const showProgress = isSelect && isFetching;
-
-  let isDisabled = false;
-  if (isSelect) {
-    if (isFetching) {
-      isDisabled = true;
-    } else if (dependentColumns && dependentColumns.length > 0) {
-      const parentColumnId = dependentColumns[0];
-      if (!formData[parentColumnId]) {
+    let isDisabled = false;
+    if (isSelect) {
+      if (isFetching) {
         isDisabled = true;
+      } else if (column.dependentColumns && column.dependentColumns.length > 0) {
+        const allDependenciesMet = column.dependentColumns?.every((depId: string) => !!formData[depId]);
+        if (!allDependenciesMet) {
+          isDisabled = true;
+        }
       }
     }
-  }
 
-  switch (type) {
-    case 'text':
-    case 'number':
-    case 'date':
-      return (
-        <TextField
-          key={id}
-          label={label}
-          variant="outlined"
-          fullWidth
-          type={type}
-          // Aplica la clase unificada aquí
-          className={styles.customInput}
-          slotProps={{
-            htmlInput: htmlInputProps,
-            inputLabel: {
-              shrink: type === 'date' || !!formData[id],
-              className: styles.customLabel,
-            },
-          }}
-          value={formData[id] || ''}
-          onChange={(e) => handleInputChange(id, e.target.value)}
-        />
-      );
-    case 'select':
-      return (
-        <Box sx={{ position: 'relative', width: '100%' }}>
-          <TextField
-            key={id}
-            select
-            label={label}
-            variant="outlined"
-            fullWidth
-            value={formData[id] || ''}
-            onChange={(e) => handleInputChange(id, e.target.value)}
-            disabled={isDisabled}
-            // Aplica la clase unificada aquí también
-            className={styles.customInput}
-            sx={{
-              '& .MuiSelect-select:focus': {
-                backgroundColor: 'transparent',
-              },
-            }}
-            slotProps={{
-              inputLabel: {
-                className: styles.customLabel,
-                shrink: !!formData[id],
-              },
-            }}
-          >
-            {isFetching ? (
-              <MenuItem disabled>Cargando...</MenuItem>
-            ) : currentOptions?.length > 0 ? (
-              currentOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))
-            ) : (
-              <MenuItem disabled>{errorOptionMessage}</MenuItem>
-            )}
-          </TextField>
-          {showProgress && (
-            <LinearProgress
-              sx={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                width: '100%',
-                borderRadius: '0 0 4px 4px',
-                height: 4,
-              }}
+    // Nueva lógica para el label flotante
+    const isFilled = !!formData[id] || isFetching;
+
+    switch (type) {
+      case 'text':
+      case 'number':
+      case 'date':
+        return (
+          <div key={id} className={`${styles.formGroup} ${isFilled ? styles.fieldFilled : ''}`}>
+            <input
+              type={type}
+              id={id}
+              className={`${styles.inputField} ${isDisabled ? styles.inputFieldDisabled : ''}`}
+              value={formData[id] || ''}
+              onChange={(e) => handleInputChange(id, e.target.value)}
+              disabled={isDisabled}
+              placeholder=""
+              {...htmlInputProps}
             />
-          )}
-        </Box>
-      );
-    default:
-      return null;
+            <label htmlFor={id} className={styles.label}>{label}</label>
+          </div>
+        );
+      case 'select':
+        return (
+          <div key={id} className={`${styles.formGroup} ${styles.selectGroup} ${isFilled ? styles.fieldFilled : ''}`}>
+            <div className={styles.selectWrapper}>
+              <select
+                id={id}
+                className={`${styles.selectField} ${styles.option} ${isDisabled ? styles.selectFieldDisabled : ''}`}
+                value={formData[id] || ''}
+                onChange={(e) => handleInputChange(id, e.target.value)}
+                disabled={isDisabled}
+                {...htmlInputProps}
+              >
+                <option value=""></option>
+                {currentOptions?.length > 0 &&
+                  currentOptions.map((option) => (
+                    <option key={option.value} value={option.value} className={styles.option}>
+                      {option.label}
+                    </option>
+                  ))}
+                {!isFetching && isSuccessful && currentOptions.length === 0 && (
+                  <option value="" disabled className={styles.option}>
+                    {errorOptionMessage}
+                  </option>
+                )}
+              </select>
+              <label htmlFor={id} className={styles.label}>{label}</label>
+              {showProgress && <div className={styles.loaderBar}></div>}
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  if (!isOpen) {
+    return null;
   }
-};
 
   return (
-    <Drawer
-      anchor="right"
-      open={isOpen}
-      onClose={onClose}
-      classes={{ paper: styles.drawerPaper }}
-    >
-      <Box className={styles.mainContainer}> 
-        <Box className={styles.headerContainer}> {/* Contenedor del encabezado */}
-          <Typography variant="h6" className={styles.title}>
-            {title}
-          </Typography>
-          {/* Aquí puedes agregar un botón de cierre si lo necesitas */}
-          <Divider className={styles.divider} />
-        </Box>
-        
-
-        {/* Este es el contenedor principal que debe crecer para empujar el footer hacia abajo */}
-        <Box className={styles.contentContainer}> 
-          <Box className={styles.inputsContainer}>
-            {columns.map(renderInput)}
-          </Box>
-        </Box>
-
-        <Box className={styles.buttonsContainer}>
-          <Button onClick={onClose} variant="outlined" className={styles.button}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} variant="contained" className={styles.button}>
-            Guardar
-          </Button>
-        </Box>
-      </Box>
-    </Drawer>
+    <div className={styles.sidebar}>
+      <header className={styles.header}>
+        <h2 className={styles.headerTitle}>{title}</h2>
+      </header>
+      <hr className={styles.divider} />
+      <main className={styles.formContainer}>
+        <form className={styles.inputsContainer}>
+          {columns.map(renderInput)}
+        </form>
+      </main>
+      <footer className={styles.footer}>
+        <button type="button" className={`${styles.button} ${styles.cancelButton}`} onClick={onClose}>
+          Cancelar
+        </button>
+        <button type="submit" className={`${styles.button} ${styles.saveButton}`} onClick={handleSave}>
+          Guardar
+        </button>
+      </footer>
+    </div>
   );
 };
 
