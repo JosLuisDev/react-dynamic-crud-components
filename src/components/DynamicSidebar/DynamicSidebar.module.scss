@@ -202,3 +202,10 @@ body {
   color: #fff;
   border-color: $primary-color;
 }
+
+.saveButtonDisabled {
+  background-color: $disabled-bg;
+  color: $disabled-text;
+  border-color: $border-color;
+  cursor: not-allowed;
+}

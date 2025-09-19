@@ -1,0 +1,206 @@
+.mainWrapper {
+  margin: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden; /* Muy importante para que los bordes redondeados se apliquen a los hijos */
+}
+
+.tableContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHeader {
+  background-color: #f5f5f5;
+  th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: bold;
+    color: #555;
+    border-bottom: 2px solid #e0e0e0;
+  }
+}
+
+.tableRow {
+  &:nth-child(even) {
+    background-color: #fafafa;
+  }
+  &:hover {
+    background-color: #f0f0f0;
+  }
+}
+
+.tableCell {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.actionsCell {
+  display: flex;
+  gap: 8px; // Espacio entre los botones de icono
+  align-items: center;
+}
+
+// NUEVO: Estilo base para los botones de icono
+.actionButton {
+  background: none; // Sin fondo
+  border: none; // Sin borde
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 50%; // Hace el área de clic circular
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease-in-out;
+
+  // Estilo para el SVG dentro del botón
+  svg {
+    transition: stroke 0.2s ease-in-out;
+  }
+
+  &:hover {
+    background-color: #f0f0f0; // Un fondo sutil al pasar el mouse
+  }
+}
+
+// Estilos específicos para el botón EDITAR
+.editButton {
+  svg {
+    stroke: #2196f3; // Color azul para el icono
+  }
+  &:hover svg {
+    stroke: #1a7bbd; // Azul más oscuro al pasar el mouse
+  }
+}
+
+// Estilos específicos para el botón ELIMINAR
+.deleteButton {
+  svg {
+    stroke: #f44336; // Color rojo para el icono
+  }
+  &:hover svg {
+    stroke: #d32f2f; // Rojo más oscuro al pasar el mouse
+  }
+}
+
+// Estilos para los filtros
+.filterContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 1rem;
+  align-items: center; // Alinea verticalmente los inputs y botones
+  margin-bottom: 1rem;
+  background-color: #00000000;
+  border-radius: 8px;
+}
+
+.filterInput {
+  padding: 8px 12px;
+  border: 1.5px solid #ccc;  // Borde más grueso
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Intel', sans-serif;
+  
+  // Añadimos un efecto de foco para mejorar la UX
+  &:focus {
+    outline: none;
+    border-color: #2196f3; // Cambia el color del borde al hacer clic
+  }
+}
+
+.addButtonContainer {
+  margin-left: auto; // Empuja el botón de agregar hacia la derecha
+}
+
+.addButton {
+  display: inline-flex; // Para alinear el icono y el texto
+  align-items: center;
+  gap: 4px; // Espacio entre el icono y el texto
+  color: #4caf50; // Texto blanco
+  background-color: #00000000;
+  font-weight: bold;
+  font-size: 14px;
+  border: none;
+  padding: 8px 16px; // Padding para que se vea como un botón completo
+  border-radius: 4px;
+  cursor: pointer;
+
+  // El icono ahora debe tener un trazo blanco para contrastar con el fondo
+  svg {
+    stroke: #4caf50;
+    width: 18px;
+    height: 18px;
+  }
+
+  // Efecto hover para oscurecer el fondo
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.clearButton {
+  svg {
+    stroke: #757575;
+  }
+  &:hover svg {
+    stroke: #333333;
+  }
+}
+
+// Paginacion
+.paginationContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 1rem;
+  font-size: 14px;
+  color: #555;
+  background-color: #f9f9f9;
+  border-top: 1px solid #e0e0e0; /* Se restaura el borde superior para separar de la tabla */
+}
+
+.paginationGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rowsPerPageSelect {
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.pageIndicator {
+  font-weight: bold;
+}
+
+.paginationButton {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: #e0e0e0;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    color: #bbb;
+    border-color: #ddd;
+  }
+}

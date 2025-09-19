@@ -3,9 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { DynamicSidebarProps, Column } from '../../types';
 import styles from './DynamicSidebar.module.scss';
-// Asegúrate de que los íconos estén disponibles como componentes SVG en tu proyecto
-// import { ReactComponent as CloseIcon } from './close.svg';
-// import { ReactComponent as CheckIcon } from './check.svg';
 
 interface ColumnOptionsState {
   [id: string]: { value: string; label: string }[];
@@ -16,30 +13,104 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
   onClose,
   title,
   columns,
-  onSave,
+  onSaveNew, // Agregado: para manejar el guardado de nuevos registros
+  onSaveEdit, // Agregado: para manejar el guardado de ediciones
+  initialData, // Agregado: para recibir la data inicial
 }) => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [columnOptions, setColumnOptions] = useState<ColumnOptionsState>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
-  const [fetchSuccess, setFetchSuccess] = useState<Record<string, boolean>>({});
+  const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setFormData({});
+      // Determina si estamos en modo "Editar" por la existencia de initialData
+      const isEditMode = !!initialData;
+
+      // Pre-llena el formulario si es modo Editar, o lo deja vacío si es modo Agregar
+      setFormData(isEditMode ? initialData : {});
+
+      // Resetea los estados de opciones y carga
       setColumnOptions({});
-      setFetchSuccess({});
+      setLoading({});
 
-      const independentSelects = columns.filter(
-        (col) => col.type === 'select' && (!col.dependentColumns || col.dependentColumns.length === 0)
-      );
+      if (isEditMode) {
+        // --- ESTAMOS EN MODO EDICIÓN ---
+        columns.forEach((col) => {
+          if (col.type === 'select') {
+            if (col.isEditable) {
+              // 1. Si el select ES EDITABLE:
+              // Hacemos fetch para cargar todas sus posibles opciones.
+              // Construimos los valores de las dependencias a partir de initialData.
+              const dependentValues: Record<string, any> = {};
+              col.dependentColumns?.forEach((depId) => {
+                dependentValues[depId] = initialData[depId];
+              });
 
-      independentSelects.forEach((col) => {
-        if (col.requestURl) {
-          fetchData(col);
-        }
-      });
+              // Verificamos que todas las dependencias tengan valor en initialData antes de hacer el fetch
+              const allDependenciesMet = col.dependentColumns?.every(
+                (depId) => !!initialData[depId]
+              );
+
+              if (!col.dependentColumns || col.dependentColumns.length === 0 || allDependenciesMet) {
+                fetchData(col, dependentValues);
+              }
+
+            } else {
+              // 2. Si el select NO ES EDITABLE:
+              // No hacemos fetch. Creamos una opción "falsa" solo para mostrar el valor actual.
+              const initialValue = initialData[col.id];
+              if (initialValue !== undefined && initialValue !== null) {
+                setColumnOptions((prev) => ({
+                  ...prev,
+                  [col.id]: [{ value: initialValue, label: String(initialValue) }],
+                }));
+              }
+            }
+          }
+        });
+      } else {
+        // --- ESTAMOS EN MODO AGREGAR ---
+        // Buscamos y cargamos solo los selects que no dependen de nadie para empezar.
+        const independentSelects = columns.filter(
+          (col) => col.type === 'select' && (!col.dependentColumns || col.dependentColumns.length === 0)
+        );
+
+        independentSelects.forEach((col) => {
+          if (col.requestURl) {
+            fetchData(col);
+          }
+        });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialData]);
+
+  useEffect(() => {
+    const isEditMode = !!initialData;
+
+    // En modo de edición, el botón de guardar siempre está habilitado.
+    if (isEditMode) {
+      setIsFormValid(true);
+      return;
+    }
+
+    // 1. Filtramos para obtener solo las columnas que se muestran en "Agregar".
+    const columnsForAddMode = columns.filter(col => col.showToAddNew);
+
+    // 2. De esas columnas, obtenemos las que son obligatorias.
+    const requiredColumns = columnsForAddMode.filter(
+      col => col.htmlInputProps?.required
+    );
+
+    // 3. Verificamos que cada columna requerida tenga un valor en el formulario.
+    const isValid = requiredColumns.every(col => {
+      const value = formData[col.id];
+      // Un valor es válido si no es nulo, indefinido o una cadena vacía.
+      return value !== null && value !== undefined && value !== '';
+    });
+
+    setIsFormValid(isValid);
+  }, [formData, columns, initialData]);
 
   const fetchData = async (column: Column, dependentValues?: Record<string, any>) => {
     if (!column.requestURl) {
@@ -48,7 +119,6 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
     }
 
     setLoading((prev) => ({ ...prev, [column.id]: true }));
-    setFetchSuccess((prev) => ({ ...prev, [column.id]: false }));
 
     let requestUrl = column.requestURl;
     if (dependentValues) {
@@ -72,14 +142,12 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
         ...prev,
         [column.id]: options,
       }));
-      setFetchSuccess((prev) => ({ ...prev, [column.id]: true }));
     } catch (error) {
       console.error(`Error fetching data for ${column.label}:`, error);
       setColumnOptions((prev) => ({
         ...prev,
         [column.id]: [],
       }));
-      setFetchSuccess((prev) => ({ ...prev, [column.id]: false }));
     } finally {
       setLoading((prev) => ({ ...prev, [column.id]: false }));
     }
@@ -90,29 +158,32 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
       ...prev,
       [id]: value,
     }));
-
+    // Manejo de dependencias
     const currentColumn = columns.find((col) => col.id === id);
+    // Si la columna actual es un select, limpiamos y recargamos las dependientes
     if (currentColumn && currentColumn.type === 'select') {
+      // Limpiamos las columnas que dependen de esta
       const dependentColumnsToClear = columns.filter((col) =>
         col.dependentColumns?.includes(id)
       );
       dependentColumnsToClear.forEach((depCol) => {
         setFormData((prev) => ({ ...prev, [depCol.id]: '' }));
         setColumnOptions((prev) => ({ ...prev, [depCol.id]: [] }));
-        setFetchSuccess((prev) => ({ ...prev, [depCol.id]: false }));
       });
-
+      // Recargamos las opciones de las columnas dependientes si se ha seleccionado un valor
       if (value) {
+        // Recorremos las columnas que dependen de esta
         dependentColumnsToClear.forEach((depCol) => {
+          // Construimos los valores actuales de las dependencias
           const dependentValues: Record<string, any> = {};
           depCol.dependentColumns?.forEach((depId) => {
             dependentValues[depId] = id === depId ? value : formData[depId];
           });
-          
+          // Verificamos que todas las dependencias tengan valor antes de hacer el fetch
           const allDependenciesMet = depCol.dependentColumns?.every(
             (depId) => !!(id === depId ? value : formData[depId])
           );
-
+          // Si todas las dependencias se cumplen, hacemos el fetch
           if (allDependenciesMet) {
             fetchData(depCol, dependentValues);
           }
@@ -122,32 +193,56 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
   };
 
   const handleSave = () => {
-    onSave(formData);
+    // Determina si estamos en modo "Editar" por la existencia de initialData
+    if (initialData) {
+      // Modo Edición
+      onSaveEdit(formData);
+    } else {
+      // Modo Agregar
+      onSaveNew(formData);
+    }
     onClose();
   };
 
   const renderInput = (column: Column) => {
-    const { id, label, type, errorOptionMessage, htmlInputProps } = column;
+    const { id, label, type, errorOptionMessage, htmlInputProps, dependentColumns, isEditable } = column;
     const currentOptions = columnOptions[id] || [];
     const isSelect = type === 'select';
     const isFetching = !!loading[id];
-    const isSuccessful = !!fetchSuccess[id];
     const showProgress = isSelect && isFetching;
 
-    let isDisabled = false;
-    if (isSelect) {
-      if (isFetching) {
-        isDisabled = true;
-      } else if (column.dependentColumns && column.dependentColumns.length > 0) {
-        const allDependenciesMet = column.dependentColumns?.every((depId: string) => !!formData[depId]);
-        if (!allDependenciesMet) {
-          isDisabled = true;
-        }
-      }
+    // Determina si estamos en modo "Editar" por la existencia de initialData
+    const isEditMode = !!initialData;
+
+    let dependenciesMet = true;
+    if (isSelect && dependentColumns && dependentColumns.length > 0) {
+      dependenciesMet = dependentColumns.every(depId => !!formData[depId]);
     }
+
+    // 1. (Estamos en modo Edición Y la columna NO es editable)
+    // 2. O si está cargando datos.
+    // 3. O si sus dependencias no se han cumplido.
+    const isDisabled = (isEditMode && !isEditable) || isFetching || !dependenciesMet;
 
     // Nueva lógica para el label flotante
     const isFilled = !!formData[id] || isFetching;
+
+    const formatDateTimeForInput = (dateTimeString: string): string => {
+      if (!dateTimeString) return '';
+      try {
+        // El formato requerido es YYYY-MM-DDTHH:mm
+        // El método .slice(0, 16) corta el string ISO ("2025-09-10T12:46:41.873Z")
+        // para obtener justo lo que necesitamos ("2025-09-10T12:46")
+        const date = new Date(dateTimeString);
+        // Ajustamos por la zona horaria local para evitar corrimientos de fecha/hora
+        const timezoneOffset = date.getTimezoneOffset() * 60000;
+        const localDate = new Date(date.getTime() - timezoneOffset);
+        return localDate.toISOString().slice(0, 16);
+      } catch (error) {
+        console.error('Invalid datetime format:', dateTimeString);
+        return '';
+      }
+    };
 
     switch (type) {
       case 'text':
@@ -160,6 +255,22 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
               id={id}
               className={`${styles.inputField} ${isDisabled ? styles.inputFieldDisabled : ''}`}
               value={formData[id] || ''}
+              onChange={(e) => handleInputChange(id, e.target.value)}
+              disabled={isDisabled}
+              placeholder=""
+              {...htmlInputProps}
+            />
+            <label htmlFor={id} className={styles.label}>{label}</label>
+          </div>
+        );
+      case 'datetime-local':
+        return (
+          <div key={id} className={`${styles.formGroup} ${isFilled ? styles.fieldFilled : ''}`}>
+            <input
+              type={type}
+              id={id}
+              className={`${styles.inputField} ${isDisabled ? styles.inputFieldDisabled : ''}`}
+              value={formatDateTimeForInput(formData[id] || '')}
               onChange={(e) => handleInputChange(id, e.target.value)}
               disabled={isDisabled}
               placeholder=""
@@ -187,7 +298,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
                       {option.label}
                     </option>
                   ))}
-                {!isFetching && isSuccessful && currentOptions.length === 0 && (
+                {!isFetching && currentOptions.length === 0 && (
                   <option value="" disabled className={styles.option}>
                     {errorOptionMessage}
                   </option>
@@ -203,6 +314,13 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
     }
   };
 
+  const isEditMode = !!initialData;
+  // Si NO es modo edición (es modo agregar), filtramos las columnas.
+  // Si es modo edición, usamos todas las columnas como vienen.
+  const columnsToRender = !isEditMode
+    ? columns.filter(col => col.showToAddNew)
+    : columns;
+
   if (!isOpen) {
     return null;
   }
@@ -215,14 +333,18 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
       <hr className={styles.divider} />
       <main className={styles.formContainer}>
         <form className={styles.inputsContainer}>
-          {columns.map(renderInput)}
+          {columnsToRender.map(renderInput)}
         </form>
       </main>
       <footer className={styles.footer}>
         <button type="button" className={`${styles.button} ${styles.cancelButton}`} onClick={onClose}>
           Cancelar
         </button>
-        <button type="submit" className={`${styles.button} ${styles.saveButton}`} onClick={handleSave}>
+        <button
+          type="submit"
+          className={`${styles.button} ${isFormValid ? styles.saveButton : styles.saveButtonDisabled}`}
+          disabled={!isFormValid}
+          onClick={handleSave}>
           Guardar
         </button>
       </footer>
