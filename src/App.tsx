@@ -136,6 +136,78 @@ const tableData: RowData[] = [
       "bankId": "BBVA",
       "accountNumber": 12345678,
       "salida": "Salida 1",
+      "creationUser": "joseluis.juarezmarquez@metlifeexternos.com.mx",
+      "creationDate": "2025-09-10T12:46:41.873",
+      "modificationUser": "user1",
+      "modificationDate": "2025-09-10T12:46:41.873"
+    },
+    {
+      "companyNumber": "2",
+      "areaId": "102",
+      "conceptId": "202",
+      "bankId": "Banamex",
+      "accountNumber": 87654321,
+      "salida": "Salida 2",
+      "creationUser": "user2",
+      "creationDate": "2025-09-10T12:46:41.873",
+      "modificationUser": "user2",
+      "modificationDate": "2025-09-10T12:46:41.873"
+    },
+    {
+      "companyNumber": "2",
+      "areaId": "103",
+      "conceptId": "203",
+      "bankId": "Santander",
+      "accountNumber": 98765432,
+      "salida": "Salida 3",
+      "creationUser": "user3",
+      "creationDate": "2025-09-10T12:46:41.873",
+      "modificationUser": "user3",
+      "modificationDate": "2025-09-10T12:46:41.873"
+    },
+    {
+      "companyNumber": "1",
+      "areaId": "101",
+      "conceptId": "201",
+      "bankId": "BBVA",
+      "accountNumber": 12345678,
+      "salida": "Salida 1",
+      "creationUser": "user1",
+      "creationDate": "2025-09-10T12:46:41.873",
+      "modificationUser": "user1",
+      "modificationDate": "2025-09-10T12:46:41.873"
+    },
+    {
+      "companyNumber": "2",
+      "areaId": "102",
+      "conceptId": "202",
+      "bankId": "Banamex",
+      "accountNumber": 87654321,
+      "salida": "Salida 2",
+      "creationUser": "user2",
+      "creationDate": "2025-09-10T12:46:41.873",
+      "modificationUser": "user2",
+      "modificationDate": "2025-09-10T12:46:41.873"
+    },
+    {
+      "companyNumber": "2",
+      "areaId": "103",
+      "conceptId": "203",
+      "bankId": "Santander",
+      "accountNumber": 98765432,
+      "salida": "Salida 3",
+      "creationUser": "user3",
+      "creationDate": "2025-09-10T12:46:41.873",
+      "modificationUser": "user3",
+      "modificationDate": "2025-09-10T12:46:41.873"
+    },
+    {
+      "companyNumber": "1",
+      "areaId": "101",
+      "conceptId": "201",
+      "bankId": "BBVA",
+      "accountNumber": 12345678,
+      "salida": "Salida 1",
       "creationUser": "user1",
       "creationDate": "2025-09-10T12:46:41.873",
       "modificationUser": "user1",
@@ -221,34 +293,12 @@ const App: React.FC = () => {
   // Manejar cuando estamos en agregar nuevo registro
   const handleSaveNewData = (newData: Record<string, any>) => {
     console.log("Nuevo registro a agregar:", newData);
+    setRowData(null);
   };
 
   // Manejar cuando estamos editando un registro existente
   const handleSaveEditData = (editedData: Record<string, any>) => {
     console.log("Registro editado a guardar:", editedData);
-    // Peticion al endpoint que actualiza un registro existente
-    fetch(`${BASE_URL}/update`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(editedData),
-    })
-    .then(response => { // Verifica si la respuesta es exitosa
-      if (!response.ok) {
-        throw new Error('Error al actualizar el registro');
-      }
-      return response.json();
-    })
-    .then(data => { // Maneja la respuesta del servidor
-      console.log('Registro actualizado:', data);
-      // Actualizar la tabla con el registro editado
-      setTableRows(prevRows => prevRows.map(row => row.accountNumber === data.accountNumber ? data : row));
-    })
-    .catch(error => { // Maneja errores de red o del servidor
-      console.error('Error:', error);
-      alert('Hubo un error al actualizar el registro. Por favor, inténtelo de nuevo.');
-    });
     setRowData(null);
   }
 
@@ -270,7 +320,7 @@ const App: React.FC = () => {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h1 style={{ textAlign: 'center' }}>Mantenimiento de Area por cuenta</h1>
+      <h1 style={{ textAlign: 'center', marginTop: '0' }}>Mantenimiento de Area por cuenta</h1>
       <DynamicTable
         columns={sampleColumns}
         data={tableRows}

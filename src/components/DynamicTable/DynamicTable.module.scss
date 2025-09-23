@@ -1,4 +1,6 @@
 .mainWrapper {
+  display: flex; /*Resolver conflicto cuando el menu de paginacion sale de la pantalla*/
+  flex-direction: column; /*REsolver conflicto cuando el menu de paginacion sale de la pantalla*/
   margin: 1rem;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -8,6 +10,8 @@
 
 .tableContainer {
   overflow-x: auto;
+  max-height: 60vh; /* Limita la altura máxima de la tabla */
+  overflow-y: auto; /* Añade scroll vertical si la tabla es muy alta */
 }
 
 .table {
@@ -38,6 +42,10 @@
 .tableCell {
   padding: 12px 15px;
   border-bottom: 1px solid #e0e0e0;
+  max-width: 250px; // Limita el ancho máximo de las celdas para evitar que se expandan demasiado
+  white-space: nowrap; // Evita que el texto se divida en varias líneas
+  overflow: hidden; // Oculta el desbordamiento de texto
+  text-overflow: ellipsis; // Añade "..." al final del texto que no cabe
 }
 
 .actionsCell {
@@ -95,7 +103,7 @@
   gap: 10px;
   padding: 10px 1rem;
   align-items: center; // Alinea verticalmente los inputs y botones
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   background-color: #00000000;
   border-radius: 8px;
 }
