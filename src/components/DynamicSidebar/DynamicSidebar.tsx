@@ -1,8 +1,9 @@
 // src/components/DynamicSidebar.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { DynamicSidebarProps, Column } from '../../types';
 import styles from './DynamicSidebar.module.scss';
+import { ValidationProps } from '../../types';
 
 interface ColumnOptionsState {
   [id: string]: { value: string; label: string }[];
@@ -21,6 +22,39 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
   const [columnOptions, setColumnOptions] = useState<ColumnOptionsState>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [isFormValid, setIsFormValid] = useState(false);
+  // --- NUEVOS ESTADOS PARA VALIDACIÓN ---
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({}); // Validar si el usuario ha interactuado con el campo
+
+  const validateField = useCallback((id: string, value: any, column: Column): string => {
+    const rules: ValidationProps = column.htmlInputProps || {};
+    
+    if (rules.required && (value === null || value === undefined || value === '')) {
+      return 'Este campo es requerido.';
+    }
+
+    if (rules.minLength && typeof value === 'string' && value.length < rules.minLength) {
+      return `Debe tener al menos ${rules.minLength} caracteres.`;
+    }
+
+    if (rules.maxLength && typeof value === 'string' && value.length > rules.maxLength) {
+      return `No puede tener más de ${rules.maxLength} caracteres.`;
+    }
+
+    if (rules.min !== undefined && typeof value === 'number' && value < Number(rules.min)) {
+      return `El valor mínimo es ${rules.min}.`;
+    }
+
+    if (rules.max !== undefined && typeof value === 'number' && value > Number(rules.max)) {
+      return `El valor máximo es ${rules.max}.`;
+    }
+
+    if (rules.pattern && typeof value === 'string' && !new RegExp(rules.pattern).test(value)) {
+      return column.errorOptionMessage || 'El formato no es válido.';
+    }
+
+    return ''; // No hay errores
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -33,6 +67,9 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
       // Resetea los estados de opciones y carga
       setColumnOptions({});
       setLoading({});
+      // --- RESETEAR ESTADOS DE VALIDACIÓN AL ABRIR ---
+      setErrors({});
+      setTouched({});
 
       if (isEditMode) {
         // --- ESTAMOS EN MODO EDICIÓN ---
@@ -84,6 +121,29 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
       }
     }
   }, [isOpen, initialData]);
+
+  useEffect(() => {
+    const isEditMode = !!initialData;
+    const columnsForCurrentMode = isEditMode ? columns : columns.filter(col => col.showToAddNew);
+    
+    let allFieldsValid = true;
+    let formHasErrors = false;
+
+    for (const col of columnsForCurrentMode) {
+        const value = formData[col.id];
+        const error = validateField(col.id, value, col);
+        if (error) {
+            allFieldsValid = false;
+        }
+    }
+
+    // Comprueba si hay algún mensaje de error en el estado de errores.
+    formHasErrors = Object.values(errors).some(msg => msg !== '');
+
+    // El formulario es válido si todos los campos cumplen la validación y no hay errores registrados.
+    setIsFormValid(allFieldsValid && !formHasErrors);
+
+  }, [formData, columns, initialData, errors, validateField]);
 
   useEffect(() => {
     const isEditMode = !!initialData;
@@ -154,18 +214,18 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
   };
 
   const handleInputChange = (id: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
-    // Manejo de dependencias
-    const currentColumn = columns.find((col) => col.id === id);
-    // Si la columna actual es un select, limpiamos y recargamos las dependientes
-    if (currentColumn && currentColumn.type === 'select') {
-      // Limpiamos las columnas que dependen de esta
-      const dependentColumnsToClear = columns.filter((col) =>
-        col.dependentColumns?.includes(id)
-      );
+    const column = columns.find((col) => col.id === id);
+    if (!column) return;
+    
+    // Actualiza el valor del formulario
+    setFormData((prev) => ({ ...prev, [id]: value }));
+
+    // --- VALIDACIÓN EN TIEMPO REAL ---
+    const error = validateField(id, value, column);
+    setErrors(prev => ({ ...prev, [id]: error }));
+
+    if (column.type === 'select') {
+      const dependentColumnsToClear = columns.filter((col) => col.dependentColumns?.includes(id));
       dependentColumnsToClear.forEach((depCol) => {
         setFormData((prev) => ({ ...prev, [depCol.id]: '' }));
         setColumnOptions((prev) => ({ ...prev, [depCol.id]: [] }));
@@ -189,6 +249,15 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
           }
         });
       }
+    }
+  };
+
+  const handleBlur = (id: string) => {
+    setTouched(prev => ({ ...prev, [id]: true }));
+    const column = columns.find((col) => col.id === id);
+    if (column) {
+      const error = validateField(id, formData[id], column);
+      setErrors(prev => ({ ...prev, [id]: error }));
     }
   };
 
@@ -226,6 +295,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
 
     // Nueva lógica para el label flotante
     const isFilled = !!formData[id] || isFetching;
+    const hasError = touched[id] && !!errors[id];
 
     const formatDateTimeForInput = (dateTimeString: string): string => {
       if (!dateTimeString) return '';
@@ -245,74 +315,89 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
     };
 
     switch (type) {
-      case 'text':
-      case 'number':
-      case 'date':
-        return (
-          <div key={id} className={`${styles.formGroup} ${isFilled ? styles.fieldFilled : ''}`}>
-            <input
-              type={type}
-              id={id}
-              className={`${styles.inputField} ${isDisabled ? styles.inputFieldDisabled : ''}`}
-              value={formData[id] || ''}
-              onChange={(e) => handleInputChange(id, e.target.value)}
-              disabled={isDisabled}
-              placeholder=""
-              {...htmlInputProps}
-            />
-            <label htmlFor={id} className={styles.label}>{label}</label>
-          </div>
-        );
-      case 'datetime-local':
-        return (
-          <div key={id} className={`${styles.formGroup} ${isFilled ? styles.fieldFilled : ''}`}>
-            <input
-              type={type}
-              id={id}
-              className={`${styles.inputField} ${isDisabled ? styles.inputFieldDisabled : ''}`}
-              value={formatDateTimeForInput(formData[id] || '')}
-              onChange={(e) => handleInputChange(id, e.target.value)}
-              disabled={isDisabled}
-              placeholder=""
-              {...htmlInputProps}
-            />
-            <label htmlFor={id} className={styles.label}>{label}</label>
-          </div>
-        );
-      case 'select':
-        return (
-          <div key={id} className={`${styles.formGroup} ${styles.selectGroup} ${isFilled ? styles.fieldFilled : ''}`}>
-            <div className={styles.selectWrapper}>
-              <select
-                id={id}
-                className={`${styles.selectField} ${styles.option} ${isDisabled ? styles.selectFieldDisabled : ''}`}
-                value={formData[id] || ''}
-                onChange={(e) => handleInputChange(id, e.target.value)}
-                disabled={isDisabled}
-                {...htmlInputProps}
-              >
-                <option value=""></option>
-                {currentOptions?.length > 0 &&
-                  currentOptions.map((option) => (
-                    <option key={option.value} value={option.value} className={styles.option}>
-                      {option.label}
-                    </option>
-                  ))}
-                {!isFetching && currentOptions.length === 0 && (
-                  <option value="" disabled className={styles.option}>
-                    {errorOptionMessage}
-                  </option>
-                )}
-              </select>
-              <label htmlFor={id} className={styles.label}>{label}</label>
-              {showProgress && <div className={styles.loaderBar}></div>}
-            </div>
-          </div>
-        );
-      default:
-        return null;
+        case 'text':
+        case 'number':
+        case 'date':
+            return (
+                <div key={id} className={`${styles.formGroup} ${isFilled ? styles.fieldFilled : ''}`}>
+                    {/* --- INICIA NUEVO CONTENEDOR --- */}
+                    <div className={styles.inputWrapper}>
+                        <input
+                            type={type}
+                            id={id}
+                            className={`${styles.inputField} ${isDisabled ? styles.inputFieldDisabled : ''} ${hasError ? styles.inputError : ''}`}
+                            value={formData[id] || ''}
+                            onChange={(e) => handleInputChange(id, e.target.value)}
+                            onBlur={() => handleBlur(id)}
+                            disabled={isDisabled}
+                            placeholder=" "
+                            {...htmlInputProps}
+                        />
+                        <label htmlFor={id} className={styles.label}>{label}</label>
+                    </div>
+                    {/* --- TERMINA NUEVO CONTENEDOR --- */}
+                    {hasError && <span className={styles.errorMessage}>{errors[id]}</span>}
+                </div>
+            );
+        case 'datetime-local':
+            return (
+                <div key={id} className={`${styles.formGroup} ${isFilled ? styles.fieldFilled : ''}`}>
+                    {/* --- INICIA NUEVO CONTENEDOR --- */}
+                    <div className={styles.inputWrapper}>
+                        <input
+                            type={type}
+                            id={id}
+                            className={`${styles.inputField} ${isDisabled ? styles.inputFieldDisabled : ''} ${hasError ? styles.inputError : ''}`}
+                            value={formatDateTimeForInput(formData[id] || '')}
+                            onChange={(e) => handleInputChange(id, e.target.value)}
+                            onBlur={() => handleBlur(id)}
+                            disabled={isDisabled}
+                            placeholder=" "
+                            {...htmlInputProps}
+                        />
+                        <label htmlFor={id} className={styles.label}>{label}</label>
+                    </div>
+                    {/* --- TERMINA NUEVO CONTENEDOR --- */}
+                    {hasError && <span className={styles.errorMessage}>{errors[id]}</span>}
+                </div>
+            );
+        case 'select':
+            return (
+                <div key={id} className={`${styles.formGroup} ${styles.selectGroup} ${isFilled ? styles.fieldFilled : ''}`}>
+                    {/* --- EN ESTE CASO, USAMOS EL .selectWrapper COMO NUESTRO CONTENEDOR --- */}
+                    <div className={`${styles.selectWrapper} ${styles.inputWrapper}`}>
+                        <select
+                            id={id}
+                            className={`${styles.selectField} ${styles.option} ${isDisabled ? styles.selectFieldDisabled : ''} ${hasError ? styles.inputError : ''}`}
+                            value={formData[id] || ''}
+                            onChange={(e) => handleInputChange(id, e.target.value)}
+                            onBlur={() => handleBlur(id)}
+                            disabled={isDisabled}
+                            {...htmlInputProps}
+                        >
+                            <option value=""></option>
+                            {currentOptions?.length > 0 &&
+                                currentOptions.map((option) => (
+                                    <option key={option.value} value={option.value} className={styles.option}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            {!isFetching && currentOptions.length === 0 && (
+                                <option value="" disabled className={styles.option}>
+                                    {errorOptionMessage}
+                                </option>
+                            )}
+                        </select>
+                        <label htmlFor={id} className={styles.label}>{label}</label>
+                        {showProgress && <div className={styles.loaderBar}></div>}
+                    </div>
+                    {hasError && <span className={styles.errorMessage}>{errors[id]}</span>}
+                </div>
+            );
+        default:
+            return null;
     }
-  };
+};
 
   const isEditMode = !!initialData;
   // Si NO es modo edición (es modo agregar), filtramos las columnas.

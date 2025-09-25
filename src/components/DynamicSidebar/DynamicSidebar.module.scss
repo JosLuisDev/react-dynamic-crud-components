@@ -78,7 +78,10 @@ body {
 .formGroup {
   display: flex;
   flex-direction: column;
-  position: relative;
+}
+
+.inputWrapper {
+  position: relative; /* El label se posicionará relativo a este contenedor */
 }
 
 .option {
@@ -208,4 +211,25 @@ body {
   color: $disabled-text;
   border-color: $border-color;
   cursor: not-allowed;
+}
+
+/* --- NUEVOS ESTILOS PARA VALIDACIÓN DE ERRORES --- */
+
+// Estilo para el borde rojo en inputs y selects con error
+.inputError {
+  border-color: #f44336; // Un color rojo para indicar error
+
+  &:focus {
+    border-color: #f44336;
+    box-shadow: 0 0 0 1px #f44336; // Sombra para resaltar el foco en el campo con error
+  }
+}
+
+// Estilo para el mensaje de error debajo del input
+.errorMessage {
+  color: #f44336;
+  font-size: 0.75rem; // Letra pequeña para el mensaje
+  padding-left: 12px; // Alineado con el padding del input
+  margin-top: 4px;   // Pequeño espacio superior
+  display: block;    // Asegura que ocupe su propia línea
 }

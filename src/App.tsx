@@ -89,6 +89,8 @@ const sampleColumns: Column[] = [
     dependentColumns: [],
     htmlInputProps: {
       required: true,
+      maxLength: 3,
+      minLength: 2,
     },
     isEditable: true,
     showToAddNew: true,
