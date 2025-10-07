@@ -52,6 +52,7 @@
   display: flex;
   gap: 8px; // Espacio entre los botones de icono
   align-items: center;
+  position: relative; // Para posicionar el popover de confirmación
 }
 
 // NUEVO: Estilo base para los botones de icono
@@ -95,6 +96,66 @@
     stroke: #d32f2f; // Rojo más oscuro al pasar el mouse
   }
 }
+
+// --- INICIO: NUEVOS ESTILOS PARA EL POPOVER DE CONFIRMACIÓN ---
+.popoverContainer {
+  position: absolute;
+  right: calc(100% - 24px); // Posiciona a la izquierda del grupo de botones
+  top: 50%;
+  transform: translateY(-50%); // Centra verticalmente
+  background-color: #ffffff;
+  border: 2px solid #007abc;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  z-index: 10;
+  width: max-content; // El ancho se ajusta al contenido
+  margin-right: 12px; // Espacio entre el popover y el icono
+}
+
+.popoverMessage {
+  margin: 0 0 1rem;
+  font-size: 14px;
+  color: #333;
+  text-align: center;
+  white-space: nowrap; // Evita que el texto se parta
+}
+
+.popoverActions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.popoverButton {
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.popoverCancelButton {
+  background-color: #fff;
+  color: #007abc;
+  border: 1px solid #007abc;
+
+  &:hover {
+    background-color: #f1f1f1;
+  }
+}
+
+.popoverConfirmButton {
+  background-color: #007abc;
+  color: white;
+
+  &:hover {
+    background-color: #00669c;
+  }
+}
+// --- FIN: NUEVOS ESTILOS PARA EL POPOVER ---
 
 // Estilos para los filtros
 .filterContainer {
@@ -211,4 +272,10 @@
     color: #bbb;
     border-color: #ddd;
   }
+}
+
+// NUEVO: Permite que el contenido de la celda de acciones (el popover) se muestre
+// fuera de los límites de la celda sin ser cortado.
+.actionsCellContainer {
+  overflow: visible;
 }

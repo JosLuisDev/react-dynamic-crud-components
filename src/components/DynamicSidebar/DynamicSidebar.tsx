@@ -74,7 +74,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
       if (isEditMode) {
         // --- ESTAMOS EN MODO EDICIÓN ---
         columns.forEach((col) => {
-          if (col.type === 'select') {
+          if (col.type === 'SELECT') {
             if (col.isEditable) {
               // 1. Si el select ES EDITABLE:
               // Hacemos fetch para cargar todas sus posibles opciones.
@@ -110,11 +110,11 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
         // --- ESTAMOS EN MODO AGREGAR ---
         // Buscamos y cargamos solo los selects que no dependen de nadie para empezar.
         const independentSelects = columns.filter(
-          (col) => col.type === 'select' && (!col.dependentColumns || col.dependentColumns.length === 0)
+          (col) => col.type === 'SELECT' && (!col.dependentColumns || col.dependentColumns.length === 0)
         );
 
         independentSelects.forEach((col) => {
-          if (col.requestURl) {
+          if (col.requestUrl) {
             fetchData(col);
           }
         });
@@ -123,64 +123,39 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
   }, [isOpen, initialData]);
 
   useEffect(() => {
-    const isEditMode = !!initialData;
-    const columnsForCurrentMode = isEditMode ? columns : columns.filter(col => col.showToAddNew);
-    
-    let allFieldsValid = true;
-    let formHasErrors = false;
+  const isEditMode = !!initialData;
+  const columnsToValidate = isEditMode ? columns : columns.filter(col => col.showToAddNew);
 
-    for (const col of columnsForCurrentMode) {
-        const value = formData[col.id];
-        const error = validateField(col.id, value, col);
-        if (error) {
-            allFieldsValid = false;
-        }
-    }
+  // Condición 1: Revisa si hay algún mensaje de error activo.
+  const hasActiveErrors = Object.values(errors).some(errorMessage => errorMessage !== '');
 
-    // Comprueba si hay algún mensaje de error en el estado de errores.
-    formHasErrors = Object.values(errors).some(msg => msg !== '');
+  if (hasActiveErrors) {
+    setIsFormValid(false);
+    return; // Si hay errores, el formulario es inválido. Fin.
+  }
 
-    // El formulario es válido si todos los campos cumplen la validación y no hay errores registrados.
-    setIsFormValid(allFieldsValid && !formHasErrors);
-
-  }, [formData, columns, initialData, errors, validateField]);
-
-  useEffect(() => {
-    const isEditMode = !!initialData;
-
-    // En modo de edición, el botón de guardar siempre está habilitado.
-    if (isEditMode) {
-      setIsFormValid(true);
-      return;
-    }
-
-    // 1. Filtramos para obtener solo las columnas que se muestran en "Agregar".
-    const columnsForAddMode = columns.filter(col => col.showToAddNew);
-
-    // 2. De esas columnas, obtenemos las que son obligatorias.
-    const requiredColumns = columnsForAddMode.filter(
-      col => col.htmlInputProps?.required
-    );
-
-    // 3. Verificamos que cada columna requerida tenga un valor en el formulario.
-    const isValid = requiredColumns.every(col => {
-      const value = formData[col.id];
-      // Un valor es válido si no es nulo, indefinido o una cadena vacía.
-      return value !== null && value !== undefined && value !== '';
+  // Condición 2: Si no hay errores, revisa que todos los campos requeridos estén llenos.
+  const requiredFieldsAreFilled = columnsToValidate
+    .filter(c => c.htmlInputProps?.required)
+    .every(c => {
+        const value = formData[c.id];
+        return value !== null && value !== undefined && value !== '';
     });
 
-    setIsFormValid(isValid);
-  }, [formData, columns, initialData]);
+  // El formulario es válido si y solo si no hay errores Y los campos requeridos están llenos.
+  setIsFormValid(requiredFieldsAreFilled);
+
+}, [formData, errors, columns, initialData]);
 
   const fetchData = async (column: Column, dependentValues?: Record<string, any>) => {
-    if (!column.requestURl) {
-      console.error(`No requestURl defined for column ${column.id}`);
+    if (!column.requestUrl) {
+      console.error(`No requestUrl defined for column ${column.id}`);
       return;
     }
 
     setLoading((prev) => ({ ...prev, [column.id]: true }));
 
-    let requestUrl = column.requestURl;
+    let requestUrl = column.requestUrl;
     if (dependentValues) {
       const values = Object.values(dependentValues).join('/');
       requestUrl = `${requestUrl}/${values}`;
@@ -224,7 +199,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
     const error = validateField(id, value, column);
     setErrors(prev => ({ ...prev, [id]: error }));
 
-    if (column.type === 'select') {
+    if (column.type === 'SELECT') {
       const dependentColumnsToClear = columns.filter((col) => col.dependentColumns?.includes(id));
       dependentColumnsToClear.forEach((depCol) => {
         setFormData((prev) => ({ ...prev, [depCol.id]: '' }));
@@ -262,6 +237,11 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
   };
 
   const handleSave = () => {
+
+    if (!isFormValid) {
+      return;
+    }
+
     // Determina si estamos en modo "Editar" por la existencia de initialData
     if (initialData) {
       // Modo Edición
@@ -276,7 +256,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
   const renderInput = (column: Column) => {
     const { id, label, type, errorOptionMessage, htmlInputProps, dependentColumns, isEditable } = column;
     const currentOptions = columnOptions[id] || [];
-    const isSelect = type === 'select';
+    const isSelect = type === 'SELECT';
     const isFetching = !!loading[id];
     const showProgress = isSelect && isFetching;
 
@@ -315,9 +295,9 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
     };
 
     switch (type) {
-        case 'text':
-        case 'number':
-        case 'date':
+        case 'TEXT':
+        case 'NUMBER':
+        case 'DATE':
             return (
                 <div key={id} className={`${styles.formGroup} ${isFilled ? styles.fieldFilled : ''}`}>
                     {/* --- INICIA NUEVO CONTENEDOR --- */}
@@ -339,7 +319,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
                     {hasError && <span className={styles.errorMessage}>{errors[id]}</span>}
                 </div>
             );
-        case 'datetime-local':
+        case 'DATETIME-LOCAL':
             return (
                 <div key={id} className={`${styles.formGroup} ${isFilled ? styles.fieldFilled : ''}`}>
                     {/* --- INICIA NUEVO CONTENEDOR --- */}
@@ -361,7 +341,7 @@ const DynamicSidebar: React.FC<DynamicSidebarProps> = ({
                     {hasError && <span className={styles.errorMessage}>{errors[id]}</span>}
                 </div>
             );
-        case 'select':
+        case 'SELECT':
             return (
                 <div key={id} className={`${styles.formGroup} ${styles.selectGroup} ${isFilled ? styles.fieldFilled : ''}`}>
                     {/* --- EN ESTE CASO, USAMOS EL .selectWrapper COMO NUESTRO CONTENEDOR --- */}

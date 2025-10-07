@@ -1,7 +1,7 @@
 // src/types/types.ts
 
 // Define los tipos de input que soportará el componente
-export type InputType = 'text' | 'number' | 'date' | 'select' | 'datetime-local';
+export type InputType = 'TEXT' | 'NUMBER' | 'DATE' | 'SELECT' | 'DATETIME-LOCAL';
 
 // Define la estructura de cada columna para el formulario
 export interface Column {
@@ -9,7 +9,7 @@ export interface Column {
   label: string; // Título que se mostrará en el formulario y en la tabla
   type: InputType;
   dependentColumns: string[]; // IDs de columnas que dependen de esta columna para hacer el fetch de datos
-  requestURl?: string; // URL para hacer fetch de datos dinámicos sin parametros
+  requestUrl?: string; // URL para hacer fetch de datos dinámicos sin parametros
   errorOptionMessage?: string; // Mensaje a mostrar en caso de error al cargar opciones
   htmlInputProps?: ValidationProps; // Propiedades HTML adicionales para el input ej: min, max, required, etc.
   isEditable: boolean; // Indica si la columna es editable o no al abrir el sidebar

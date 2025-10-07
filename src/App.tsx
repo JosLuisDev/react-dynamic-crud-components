@@ -11,9 +11,9 @@ const sampleColumns: Column[] = [
   {
     id: 'companyNumber',
     label: 'Compañia',
-    type: 'select',
+    type: 'SELECT',
     dependentColumns: [],
-    requestURl: `${BASE_URL}/getAllCompany`,
+    requestUrl: `${BASE_URL}/getAllCompany`,
     errorOptionMessage: 'No hay compañías disponibles',
     htmlInputProps: {
       required: true,
@@ -26,9 +26,9 @@ const sampleColumns: Column[] = [
   {
     id: 'areaId',
     label: 'Area',
-    type: 'select',
+    type: 'SELECT',
     dependentColumns: ['companyNumber'],
-    requestURl: `${BASE_URL}/getAreaByCompany`,
+    requestUrl: `${BASE_URL}/getAreaByCompany`,
     errorOptionMessage: 'No hay áreas disponibles',
     htmlInputProps: {
       required: true,
@@ -41,9 +41,9 @@ const sampleColumns: Column[] = [
   {
     id: 'conceptId',
     label: 'Concepto',
-    type: 'select',
+    type: 'SELECT',
     dependentColumns: ['companyNumber', 'areaId'],
-    requestURl: `${BASE_URL}/concept`,
+    requestUrl: `${BASE_URL}/concept`,
     errorOptionMessage: 'No hay conceptos disponibles',
     htmlInputProps: {
       required: true,
@@ -56,9 +56,9 @@ const sampleColumns: Column[] = [
   {
     id: 'bankId',
     label: 'Banco',
-    type: 'select',
+    type: 'SELECT',
     dependentColumns: ['companyNumber'],
-    requestURl: `${BASE_URL}/getBankByCompany`,
+    requestUrl: `${BASE_URL}/getBankByCompany`,
     errorOptionMessage: 'No hay bancos disponibles',
     htmlInputProps: {
       required: true,
@@ -71,9 +71,9 @@ const sampleColumns: Column[] = [
   {
     id: 'accountNumber',
     label: 'Cuenta',
-    type: 'select',
+    type: 'SELECT',
     dependentColumns: ['companyNumber', 'bankId'],
-    requestURl: `${BASE_URL}/account`,
+    requestUrl: `${BASE_URL}/account`,
     errorOptionMessage: 'No hay cuentas disponibles',
     htmlInputProps: {
       required: true,
@@ -85,7 +85,7 @@ const sampleColumns: Column[] = [
   {
     id: 'salida',
     label: 'Salida',
-    type: 'text',
+    type: 'TEXT',
     dependentColumns: [],
     htmlInputProps: {
       required: true,
@@ -99,7 +99,7 @@ const sampleColumns: Column[] = [
   {
     id: 'creationUser',
     label: 'Usuario Creación',
-    type: 'text',
+    type: 'TEXT',
     dependentColumns: [],
     isEditable: false,
     showToAddNew: false
@@ -107,7 +107,7 @@ const sampleColumns: Column[] = [
   {
     id: 'creationDate',
     label: 'Fecha Creación',
-    type: 'datetime-local',
+    type: 'DATETIME-LOCAL',
     dependentColumns: [],
     isEditable: false,
     showToAddNew: false
@@ -115,7 +115,7 @@ const sampleColumns: Column[] = [
   {
     id: 'modificationUser',
     label: 'Usuario Modificación',
-    type: 'text',
+    type: 'TEXT',
     dependentColumns: [],
     isEditable: false,
     showToAddNew: false
@@ -123,7 +123,7 @@ const sampleColumns: Column[] = [
   {
     id: 'modificationDate',
     label: 'Fecha Modificación',
-    type: 'datetime-local',
+    type: 'DATETIME-LOCAL',
     dependentColumns: [],
     isEditable: false,
     showToAddNew: false
@@ -168,7 +168,7 @@ const tableData: RowData[] = [
       "modificationDate": "2025-09-10T12:46:41.873"
     },
     {
-      "companyNumber": "1",
+      "companyNumber": "2",
       "areaId": "101",
       "conceptId": "201",
       "bankId": "BBVA",
@@ -182,7 +182,7 @@ const tableData: RowData[] = [
     {
       "companyNumber": "2",
       "areaId": "102",
-      "conceptId": "202",
+      "conceptId": "203",
       "bankId": "Banamex",
       "accountNumber": 87654321,
       "salida": "Salida 2",
@@ -204,7 +204,7 @@ const tableData: RowData[] = [
       "modificationDate": "2025-09-10T12:46:41.873"
     },
     {
-      "companyNumber": "1",
+      "companyNumber": "3",
       "areaId": "101",
       "conceptId": "201",
       "bankId": "BBVA",
@@ -218,7 +218,7 @@ const tableData: RowData[] = [
     {
       "companyNumber": "2",
       "areaId": "102",
-      "conceptId": "202",
+      "conceptId": "204",
       "bankId": "Banamex",
       "accountNumber": 87654321,
       "salida": "Salida 2",
@@ -240,7 +240,7 @@ const tableData: RowData[] = [
       "modificationDate": "2025-09-10T12:46:41.873"
     },
     {
-      "companyNumber": "1",
+      "companyNumber": "4",
       "areaId": "101",
       "conceptId": "201",
       "bankId": "BBVA",
@@ -254,7 +254,7 @@ const tableData: RowData[] = [
     {
       "companyNumber": "2",
       "areaId": "102",
-      "conceptId": "202",
+      "conceptId": "205",
       "bankId": "Banamex",
       "accountNumber": 87654321,
       "salida": "Salida 2",
