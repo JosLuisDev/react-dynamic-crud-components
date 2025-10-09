@@ -156,7 +156,7 @@ const tableData: RowData[] = [
       "modificationDate": "2025-09-10T12:46:41.873"
     },
     {
-      "companyNumber": "2",
+      "companyNumber": "10",
       "areaId": "103",
       "conceptId": "203",
       "bankId": "Santander",
@@ -193,7 +193,7 @@ const tableData: RowData[] = [
     },
     {
       "companyNumber": "2",
-      "areaId": "103",
+      "areaId": "1031",
       "conceptId": "203",
       "bankId": "Santander",
       "accountNumber": 98765432,
@@ -231,7 +231,7 @@ const tableData: RowData[] = [
       "companyNumber": "2",
       "areaId": "103",
       "conceptId": "203",
-      "bankId": "Santander",
+      "bankId": "Santander2",
       "accountNumber": 98765432,
       "salida": "Salida 3",
       "creationUser": "user3",
@@ -321,8 +321,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1 style={{ textAlign: 'center', marginTop: '0' }}>Mantenimiento de Area por cuenta</h1>
+    <div style={{ padding: '0', margin: '0' }}>
+      <h1 style={{ textAlign: 'center', marginTop: '0' }}>AREAS POR CUENTA</h1>
       <DynamicTable
         columns={sampleColumns}
         data={tableRows}

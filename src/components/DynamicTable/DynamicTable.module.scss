@@ -1,32 +1,39 @@
 .mainWrapper {
   display: flex; /*Resolver conflicto cuando el menu de paginacion sale de la pantalla*/
   flex-direction: column; /*REsolver conflicto cuando el menu de paginacion sale de la pantalla*/
-  margin: 1rem;
+  margin: 8px;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   overflow: hidden; /* Muy importante para que los bordes redondeados se apliquen a los hijos */
+  max-height: 75vh; // Evitar que la tabla crezca demasiado y desborde la pantalla
 }
 
 .tableContainer {
   overflow-x: auto;
-  max-height: 60vh; /* Limita la altura máxima de la tabla */
+  max-height: 550px; /* Limita la altura máxima de la tabla */
+  min-height: 280px;
   overflow-y: auto; /* Añade scroll vertical si la tabla es muy alta */
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.71rem;
 }
 
 .tableHeader {
   background-color: #f5f5f5;
   th {
-    padding: 12px 15px;
+    padding: 10px 10px;
     text-align: left;
     font-weight: bold;
     color: #555;
     border-bottom: 2px solid #e0e0e0;
+    position: sticky; /* Hace que el encabezado sea pegajoso */
+    top: 0; /* Posiciona el encabezado en la parte superior al hacer scroll */
+    background-color: #f5f5f5; /* Asegura que el fondo del encabezado sea sólido */
+    z-index: 3; /* Asegura que el encabezado esté por encima de las filas al hacer scroll */
   }
 }
 
@@ -40,9 +47,9 @@
 }
 
 .tableCell {
-  padding: 12px 15px;
+  padding: 12px 10px;
   border-bottom: 1px solid #e0e0e0;
-  max-width: 250px; // Limita el ancho máximo de las celdas para evitar que se expandan demasiado
+  max-width: 100px; // Limita el ancho máximo de las celdas para evitar que se expandan demasiado
   white-space: nowrap; // Evita que el texto se divida en varias líneas
   overflow: hidden; // Oculta el desbordamiento de texto
   text-overflow: ellipsis; // Añade "..." al final del texto que no cabe
@@ -50,9 +57,14 @@
 
 .actionsCell {
   display: flex;
-  gap: 8px; // Espacio entre los botones de icono
+  gap: 4px; // Espacio entre los botones de icono
   align-items: center;
   position: relative; // Para posicionar el popover de confirmación
+}
+
+.actionsHeader {
+  width: 60px; // Ancho fijo para la columna de acciones
+  padding: 0; // Elimina el padding para centrar los iconos
 }
 
 // NUEVO: Estilo base para los botones de icono
@@ -115,7 +127,7 @@
 
 .popoverMessage {
   margin: 0 0 1rem;
-  font-size: 14px;
+  font-size: 0.71rem;
   color: #333;
   text-align: center;
   white-space: nowrap; // Evita que el texto se parta
@@ -132,7 +144,7 @@
   padding: 6px 16px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.71rem;
   font-weight: bold;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
@@ -161,8 +173,8 @@
 .filterContainer {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px 1rem;
+  gap: 7px;
+  padding: 5px 8px;
   align-items: center; // Alinea verticalmente los inputs y botones
   margin-bottom: 0;
   background-color: #00000000;
@@ -170,10 +182,10 @@
 }
 
 .filterInput {
-  padding: 8px 12px;
+  padding: 5px 8px;
   border: 1.5px solid #ccc;  // Borde más grueso
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.71rem;
   font-family: 'Intel', sans-serif;
   
   // Añadimos un efecto de foco para mejorar la UX
@@ -194,7 +206,7 @@
   color: #4caf50; // Texto blanco
   background-color: #00000000;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 0.71rem;
   border: none;
   padding: 8px 16px; // Padding para que se vea como un botón completo
   border-radius: 4px;
@@ -228,7 +240,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 1rem;
-  font-size: 14px;
+  font-size: 0.71rem;
   color: #555;
   background-color: #f9f9f9;
   border-top: 1px solid #e0e0e0; /* Se restaura el borde superior para separar de la tabla */
@@ -238,6 +250,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 0.71rem;
 }
 
 .rowsPerPageSelect {

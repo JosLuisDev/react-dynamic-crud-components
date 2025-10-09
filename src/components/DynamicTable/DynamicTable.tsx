@@ -113,8 +113,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ columns, data, onEdit, onCl
   };
 
   const formatValue = (value: any, dataType: string) => {
-    if (dataType === 'datetime-local' && value) {
-      return new Date(value).toLocaleString();
+    if (dataType.toUpperCase() === 'DATETIME-LOCAL' && value) {
+      try {
+        const date = new Date(value);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses son 0-indexed
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${day}-${month}-${year} ${hours}:${minutes}`;
+      } catch (e) {
+        return String(value ?? ''); // Fallback en caso de fecha inválida
+      }
     }
     return String(value ?? ''); // Usamos ?? para manejar null y undefined
   };
@@ -145,13 +155,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ columns, data, onEdit, onCl
             />
           ))}
           <button onClick={clearFilters} className={`${styles.actionButton} ${styles.clearButton}`} title="Limpiar Filtros">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M13.013 3H2l8 9.46V19l4 2v-8.54l.9-1.055M22 3l-5 5M17 3l5 5" />
             </svg>
           </button>
           <div className={styles.addButtonContainer}>
             <button onClick={onCliclkAdd} className={styles.addButton} title="Agregar Nuevo">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
@@ -169,7 +179,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ columns, data, onEdit, onCl
                 {columns.map((column) => (
                   <th key={column.id}>{column.label}</th>
                 ))}
-                <th></th>
+                <th className={styles.actionsHeader}></th>
               </tr>
             </thead>
             <tbody>
